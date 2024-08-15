@@ -1,0 +1,20 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: sdvx_db_container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: sdvx_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      TZ: Asia/Tokyo
+      LANG: ja_JP.UTF-8
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-volume:/var/lib/mysql
+      - ./mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+
+volumes:
+  db-volume:
