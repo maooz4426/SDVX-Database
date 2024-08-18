@@ -73,8 +73,6 @@ func (a *Service) RegisterMusicData(ctx context.Context) error {
 		reader := strings.NewReader(content)
 		doc, _ := goquery.NewDocumentFromReader(reader)
 
-		ctx := context.Background()
-
 		if err != nil {
 			log.Fatal(err)
 		}

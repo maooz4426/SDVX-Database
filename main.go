@@ -49,6 +49,8 @@ func main() {
 
 	svc.RegisterMusicData(ctx)
 
+	//r := mux.NewRouter()
+
 	//テーブル作成
 	//infrastructure.CreateTable(db)
 
