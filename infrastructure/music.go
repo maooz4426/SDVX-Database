@@ -1,54 +1,41 @@
-package repository
+package infrastructure
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/maooz4426/SDVX-Database/domain"
+	"github.com/maooz4426/SDVX-Database/domain/model"
+	"github.com/maooz4426/SDVX-Database/domain/repository"
 	"time"
 )
 
 type MusicRepository struct {
 	db *sql.DB
 }
-
-func NewMusicRepository(db *sql.DB) *MusicRepository {
-	return &MusicRepository{db}
+type MusicRepositoryImpl interface {
+	RegisterMusic(ctx context.Context, music model.Music) error
+	GetMusicID(ctx context.Context, music model.Music) (int, error)
+	RegisterLevel(ctx context.Context, musicID int, level model.Level) error
 }
 
-//func CreateTable(db *sql.DB) {
-//
-//	//存在したら削除
-//	dropquery := `DROP TABLE IF EXISTS musics;`
-//	_, err := db.Exec(dropquery)
-//	if err != nil {
-//		log.Fatal(err)
+//	func NewMusicRepository(db *sql.DB) *MusicRepository {
+//		return &MusicRepository{db}
 //	}
-//
-//	query := `CREATE TABLE IF NOT EXISTS musics (
-//    	music_id INTERGER NOT NULL PRIMARY KEY,
-//    	music_name TEXT NOT NULL,
-//    	composer TEXT NOT NULL,
-//    	createdAt TIMESTAMP NOT NULL,
-//    	updatedAt TIMESTAMP NOT NULL
-//);`
-//	_, err = db.Exec(query)
-//
-//	if err != nil {
-//		log.Fatal("database can't create table", err)
-//	}
-//}
+func NewMusicRepository(db *sql.DB) repository.MusicRepositoryImpl {
+	return &MusicRepository{db}
+}
 
 //mはメソッドレシーバーのこと
 
 //ctxでキャンセル情報を共有する
 
 // 楽曲登録
-func (m *MusicRepository) RegisterMusic(ctx context.Context, music domain.Music) error {
+func (m *MusicRepository) RegisterMusic(ctx context.Context, music model.Music) error {
 	query := `INSERT INTO musics (music_name, composer,createdAt,updatedAt) VALUES (?, ?,?,?);`
 
 	//log.Println(music.MusicName)
+	//log.Println(music)
 
 	_, err := m.db.ExecContext(ctx, query, music.MusicName, music.Composer, time.Now(), time.Now())
 
@@ -60,7 +47,7 @@ func (m *MusicRepository) RegisterMusic(ctx context.Context, music domain.Music)
 	return nil
 }
 
-func (m *MusicRepository) GetMusicID(ctx context.Context, music domain.Music) (int, error) {
+func (m *MusicRepository) GetMusicID(ctx context.Context, music model.Music) (int, error) {
 	var musicID int
 	query := `SELECT music_id FROM musics WHERE music_name = ? AND composer = ?;`
 
@@ -73,7 +60,7 @@ func (m *MusicRepository) GetMusicID(ctx context.Context, music domain.Music) (i
 	return musicID, nil
 }
 
-func (m *MusicRepository) RegisterLevel(ctx context.Context, musicID int, level domain.Level) error {
+func (m *MusicRepository) RegisterLevel(ctx context.Context, musicID int, level model.Level) error {
 	query := `INSERT INTO levels(music_id,level_name, level_value,created_at,updated_at) VALUES (?, ?,?,?,?);`
 
 	_, err := m.db.ExecContext(ctx, query, musicID, level.LevelName, level.LevelValue, time.Now(), time.Now())

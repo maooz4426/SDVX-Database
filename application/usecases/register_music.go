@@ -1,9 +1,10 @@
-package services
+package usecases
 
 import (
 	"context"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/maooz4426/SDVX-Database/domain"
+	"github.com/maooz4426/SDVX-Database/domain/model"
+	"github.com/maooz4426/SDVX-Database/domain/repository"
 	"github.com/sclevine/agouti"
 	"log"
 	"strconv"
@@ -12,24 +13,28 @@ import (
 )
 
 // メソッド抽象化して依存させる
-type MusicRepository interface {
-	RegisterMusic(ctx context.Context, music domain.Music) error
-	GetMusicID(ctx context.Context, music domain.Music) (int, error)
-	RegisterLevel(ctx context.Context, musicID int, level domain.Level) error
+//type MusicRepository interface {
+//	RegisterMusic(ctx context.Context, music domain.Music) error
+//	GetMusicID(ctx context.Context, music domain.Music) (int, error)
+//	RegisterLevel(ctx context.Context, musicID int, level domain.Level) error
+//}
+
+type MusicRegisterImpl interface {
+	Register(ctx context.Context) error
 }
 
-type Service struct {
-	musicRepo MusicRepository
+type MusicRegister struct {
+	musicRepo repository.MusicRepositoryImpl
 }
 
 // インスタンスメソッド
-func NewService(m MusicRepository) *Service {
-	return &Service{
+func NewRegisterMusicData(m repository.MusicRepositoryImpl) MusicRegisterImpl {
+	return &MusicRegister{
 		musicRepo: m,
 	}
 }
 
-func (a *Service) RegisterMusicData(ctx context.Context) error {
+func (a *MusicRegister) Register(ctx context.Context) error {
 	var err error
 
 	url := "https://p.eagate.573.jp/game/sdvx/vi/music/index.html"
@@ -77,8 +82,8 @@ func (a *Service) RegisterMusicData(ctx context.Context) error {
 			log.Fatal(err)
 		}
 
-		var music domain.Music
-		var level domain.Level
+		var music model.Music
+		var level model.Level
 		doc.Find(".music").Each(func(i int, s *goquery.Selection) {
 			s.Find(".info p").Each(func(i int, info *goquery.Selection) {
 				if i == 0 {
