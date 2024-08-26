@@ -13,31 +13,28 @@ import (
 type MusicRepository struct {
 	db *sql.DB
 }
+
 type MusicRepositoryImpl interface {
 	RegisterMusic(ctx context.Context, music model.Music) error
 	GetMusicID(ctx context.Context, music model.Music) (int, error)
 	RegisterLevel(ctx context.Context, musicID int, level model.Level) error
 }
 
-//	func NewMusicRepository(db *sql.DB) *MusicRepository {
-//		return &MusicRepository{db}
-//	}
 func NewMusicRepository(db *sql.DB) repository.MusicRepositoryImpl {
 	return &MusicRepository{db}
 }
 
 //mはメソッドレシーバーのこと
-
 //ctxでキャンセル情報を共有する
 
 // 楽曲登録
 func (m *MusicRepository) RegisterMusic(ctx context.Context, music model.Music) error {
-	query := `INSERT INTO musics (music_name, composer,createdAt,updatedAt) VALUES (?, ?,?,?);`
+	//query := `INSERT INTO musics (music_name, composer,createdAt,updatedAt) VALUES (?, ?,?,?);`
 
-	//log.Println(music.MusicName)
-	//log.Println(music)
+	query := `INSERT INTO musics (music_name, composer,createdAt,updatedAt) 
+SELECT ?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM musics WHERE music_name = ? AND composer = ?)`
 
-	_, err := m.db.ExecContext(ctx, query, music.MusicName, music.Composer, time.Now(), time.Now())
+	_, err := m.db.ExecContext(ctx, query, music.MusicName, music.Composer, time.Now(), time.Now(), music.MusicName, music.Composer)
 
 	if err != nil {
 		//log.Fatal("database can't insert music", err)
