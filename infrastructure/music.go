@@ -31,15 +31,33 @@ func NewMusicRepository(db *sql.DB) repository.MusicRepositoryImpl {
 func (m *MusicRepository) RegisterMusic(ctx context.Context, music model.Music) error {
 	//query := `INSERT INTO musics (music_name, composer,createdAt,updatedAt) VALUES (?, ?,?,?);`
 
-	query := `INSERT INTO musics (music_name, composer,createdAt,updatedAt) 
-SELECT ?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM musics WHERE music_name = ? AND composer = ?)`
+	//	query := `INSERT INTO musics (music_name, composer,createdAt,updatedAt)
+	//SELECT ?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM musics WHERE music_name = ? AND composer = ?)`
 
-	_, err := m.db.ExecContext(ctx, query, music.MusicName, music.Composer, time.Now(), time.Now(), music.MusicName, music.Composer)
+	tx, err := m.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	query := `INSERT INTO musics (music_name, composer, createdAt, updatedAt) 
+SELECT ?, ?, ?, ?
+WHERE NOT EXISTS (
+    SELECT 1 
+    FROM musics 
+    WHERE  (music_name = ? AND composer = ?)
+);`
+
+	_, err = m.db.ExecContext(ctx, query, music.MusicName, music.Composer, time.Now(), time.Now(), music.MusicName, music.Composer)
 
 	if err != nil {
-		//log.Fatal("database can't insert music", err)
+		tx.Rollback()
 		return fmt.Errorf("Error register music :%s", err)
 	}
+
+	//if err != nil {
+	//	//log.Fatal("database can't insert music", err)
+	//
+	//}
 
 	return nil
 }
@@ -58,10 +76,17 @@ func (m *MusicRepository) GetMusicID(ctx context.Context, music model.Music) (in
 }
 
 func (m *MusicRepository) RegisterLevel(ctx context.Context, musicID int, level model.Level) error {
-	query := `INSERT INTO levels(music_id,level_name, level_value,created_at,updated_at) VALUES (?, ?,?,?,?);`
-
-	_, err := m.db.ExecContext(ctx, query, musicID, level.LevelName, level.LevelValue, time.Now(), time.Now())
+	tx, err := m.db.Begin()
 	if err != nil {
+		return err
+	}
+	query := `INSERT INTO levels (music_id, level_name, level_value, created_at, updated_at)
+SELECT ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM levels WHERE music_id = ? AND level_name = ? AND level_value = ?);`
+
+	_, err = m.db.ExecContext(ctx, query, musicID, level.LevelName, level.LevelValue, time.Now(), time.Now(), musicID, level.LevelName, level.LevelValue)
+
+	if err != nil {
+		tx.Rollback()
 		return fmt.Errorf("failed to add level: %s", err)
 	}
 
