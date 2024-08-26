@@ -19,6 +19,7 @@ import (
 //	RegisterLevel(ctx context.Context, musicID int, level domain.Level) error
 //}
 
+// 楽曲登録を定義
 type MusicRegisterImpl interface {
 	Register(ctx context.Context) error
 }
