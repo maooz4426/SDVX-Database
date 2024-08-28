@@ -4,6 +4,13 @@ import "time"
 
 //扱うモデルを定義
 
+type MusicData struct {
+	MusicName  string
+	Composer   string
+	LevelName  string
+	LevelValue int
+}
+
 type Music struct {
 	ID        int
 	MusicName string

@@ -12,13 +12,6 @@ import (
 	"time"
 )
 
-// メソッド抽象化して依存させる
-//type MusicRepository interface {
-//	RegisterMusic(ctx context.Context, music domain.Music) error
-//	GetMusicID(ctx context.Context, music domain.Music) (int, error)
-//	RegisterLevel(ctx context.Context, musicID int, level domain.Level) error
-//}
-
 // 楽曲登録を定義
 type MusicRegisterImpl interface {
 	Register(ctx context.Context) error
@@ -89,14 +82,10 @@ func (a *MusicRegister) Register(ctx context.Context) error {
 			s.Find(".info p").Each(func(i int, info *goquery.Selection) {
 				if i == 0 {
 					music.MusicName = info.Text()
-					//fmt.Println(music.MusicName)
 				} else if i == 1 {
 					music.Composer = info.Text()
-					//fmt.Println(music.Composer)
 				}
 			})
-
-			//fmt.Println(music)
 
 			if err := a.musicRepo.RegisterMusic(ctx, music); err != nil {
 				log.Printf("Failed to register music %s: %v", music.MusicName, err)

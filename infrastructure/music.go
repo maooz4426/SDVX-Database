@@ -6,7 +6,6 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/maooz4426/SDVX-Database/domain/model"
-	"github.com/maooz4426/SDVX-Database/domain/repository"
 	"time"
 )
 
@@ -20,7 +19,7 @@ type MusicRepositoryImpl interface {
 	RegisterLevel(ctx context.Context, musicID int, level model.Level) error
 }
 
-func NewMusicRepository(db *sql.DB) repository.MusicRepositoryImpl {
+func NewMusicRepository(db *sql.DB) *MusicRepository {
 	return &MusicRepository{db}
 }
 
@@ -29,10 +28,6 @@ func NewMusicRepository(db *sql.DB) repository.MusicRepositoryImpl {
 
 // 楽曲登録
 func (m *MusicRepository) RegisterMusic(ctx context.Context, music model.Music) error {
-	//query := `INSERT INTO musics (music_name, composer,createdAt,updatedAt) VALUES (?, ?,?,?);`
-
-	//	query := `INSERT INTO musics (music_name, composer,createdAt,updatedAt)
-	//SELECT ?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM musics WHERE music_name = ? AND composer = ?)`
 
 	tx, err := m.db.Begin()
 	if err != nil {
@@ -47,17 +42,12 @@ WHERE NOT EXISTS (
     WHERE  (music_name = ? AND composer = ?)
 );`
 
-	_, err = m.db.ExecContext(ctx, query, music.MusicName, music.Composer, time.Now(), time.Now(), music.MusicName, music.Composer)
+	_, err = tx.ExecContext(ctx, query, music.MusicName, music.Composer, time.Now(), time.Now(), music.MusicName, music.Composer)
 
 	if err != nil {
 		tx.Rollback()
 		return fmt.Errorf("Error register music :%s", err)
 	}
-
-	//if err != nil {
-	//	//log.Fatal("database can't insert music", err)
-	//
-	//}
 
 	return nil
 }
@@ -83,7 +73,7 @@ func (m *MusicRepository) RegisterLevel(ctx context.Context, musicID int, level 
 	query := `INSERT INTO levels (music_id, level_name, level_value, created_at, updated_at)
 SELECT ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM levels WHERE music_id = ? AND level_name = ? AND level_value = ?);`
 
-	_, err = m.db.ExecContext(ctx, query, musicID, level.LevelName, level.LevelValue, time.Now(), time.Now(), musicID, level.LevelName, level.LevelValue)
+	_, err = tx.ExecContext(ctx, query, musicID, level.LevelName, level.LevelValue, time.Now(), time.Now(), musicID, level.LevelName, level.LevelValue)
 
 	if err != nil {
 		tx.Rollback()
@@ -91,4 +81,43 @@ SELECT ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM levels WHERE music_id = ? A
 	}
 
 	return nil
+}
+
+func (m *MusicRepository) GetMusicData(ctx context.Context, musicID string) (musics []model.MusicData, err error) {
+	tx, err := m.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(musicID)
+
+	query := `SELECT m.music_name, m.composer,l.level_name,l.level_value FROM musics as m LEFT OUTER JOIN levels as l ON m.music_id = l.music_id WHERE m.music_id = ?;`
+
+	rows, err := tx.QueryContext(ctx, query, musicID)
+	if err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("failed to get music data: %s", err)
+	}
+
+	for rows.Next() {
+		var musicName, composer, levelName string
+		var levelValue int
+		err := rows.Scan(&musicName, &composer, &levelName, &levelValue)
+		fmt.Println(musicName, composer, levelName, levelValue)
+		if err != nil {
+			tx.Rollback()
+		}
+		musicData := model.MusicData{
+			MusicName:  musicName,
+			Composer:   composer,
+			LevelName:  levelName,
+			LevelValue: levelValue,
+		}
+
+		fmt.Println(musicData)
+		musics = append(musics, musicData)
+	}
+
+	return musics, nil
+
 }
