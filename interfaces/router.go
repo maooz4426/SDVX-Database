@@ -11,7 +11,9 @@ func InitRouter(usc *usecases.GetMusicUseCase) {
 
 	r := mux.NewRouter()
 
-	c := Controller{usc}
+	//c := Controller{usc}
+
+	c := NewController(usc)
 
 	fmt.Println("Listening on port 8080")
 
