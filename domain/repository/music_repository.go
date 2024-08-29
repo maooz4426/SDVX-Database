@@ -11,4 +11,5 @@ type MusicRepositoryImpl interface {
 	GetMusicID(ctx context.Context, music model.Music) (int, error)
 	RegisterLevel(ctx context.Context, musicID int, level model.Level) error
 	GetMusicData(ctx context.Context, musicID string) (musics []model.MusicData, err error)
+	SearchMusicData(ctx context.Context, key string) ([]string, error)
 }

@@ -23,9 +23,9 @@ func (c *Controller) GetMusicData(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	vars := mux.Vars(r)
-	musicID := vars["musicID"]
-	//fmt.Println(musicID)
-	musics, err := c.GetMusicUseCase.GetMusicData(ctx, musicID)
+	key := vars["key"]
+	//fmt.Println(key)
+	musics, err := c.GetMusicUseCase.GetMusicData(ctx, key)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

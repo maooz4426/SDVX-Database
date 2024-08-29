@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"fmt"
 	"github.com/maooz4426/SDVX-Database/domain/model"
 	"github.com/maooz4426/SDVX-Database/domain/repository"
 )
@@ -24,20 +25,29 @@ func NewGetMusicUseCase(m repository.MusicRepositoryImpl) *GetMusicUseCase {
 	}
 }
 
-func (g *GetMusicUseCase) GetMusicData(ctx context.Context, musicID string) ([]model.MusicData, error) {
-	musics, err := g.musicRepo.GetMusicData(ctx, musicID)
+func (g *GetMusicUseCase) GetMusicData(ctx context.Context, key string) ([]model.MusicData, error) {
+
+	musicIdList, err := g.musicRepo.SearchMusicData(ctx, key)
+	//fmt.Println(musicIdList)
+
 	if err != nil {
 		return nil, err
 	}
 
-	//jsonData, err := json.Marshal(musics)
-	if err != nil {
-		return nil, err
+	var musicList []model.MusicData
+
+	for _, musicId := range musicIdList {
+		//fmt.Println(musicId)
+		musics, err := g.musicRepo.GetMusicData(ctx, string(musicId))
+		fmt.Println(musics)
+		for _, music := range musics {
+			musicList = append(musicList, music)
+		}
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return musics, nil
+	return musicList, nil
 
-	//w.Header().Add("Content-Type", "application/json")
-	//w.WriteHeader(http.StatusOK)
-	//w.Write(jsonData)
 }

@@ -11,13 +11,11 @@ func InitRouter(usc *usecases.GetMusicUseCase) {
 
 	r := mux.NewRouter()
 
-	//c := Controller{usc}
-
 	c := NewController(usc)
 
 	fmt.Println("Listening on port 8080")
 
-	r.HandleFunc("/musics/{musicID}", c.GetMusicData)
+	r.HandleFunc("/musics/{key}", c.GetMusicData)
 
 	//これ最後にしないとhandleFuncが機能しない
 	http.ListenAndServe(":8080", r)

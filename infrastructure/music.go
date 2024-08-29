@@ -89,11 +89,12 @@ func (m *MusicRepository) GetMusicData(ctx context.Context, musicID string) (mus
 		return nil, err
 	}
 
-	fmt.Println(musicID)
+	fmt.Println("id:", musicID)
 
 	query := `SELECT m.music_name, m.composer,l.level_name,l.level_value FROM musics as m LEFT OUTER JOIN levels as l ON m.music_id = l.music_id WHERE m.music_id = ?;`
 
 	rows, err := tx.QueryContext(ctx, query, musicID)
+	//fmt.Println(rows)
 	if err != nil {
 		tx.Rollback()
 		return nil, fmt.Errorf("failed to get music data: %s", err)
@@ -119,5 +120,42 @@ func (m *MusicRepository) GetMusicData(ctx context.Context, musicID string) (mus
 	}
 
 	return musics, nil
+
+}
+
+func (m *MusicRepository) SearchMusicData(ctx context.Context, key string) ([]string, error) {
+	keyword := "%" + key + "%"
+	//fmt.Println(keyword)
+
+	tx, err := m.db.Begin()
+
+	query := `SELECT music_id from musics WHERE music_name LIKE ? OR composer LIKE ?;`
+
+	//query := `SELECT m.music_id FROM musics as m LEFT OUTER JOIN levels as l ON m.music_id = l.music_id WHERE music_name LIKE ? OR music_name LIKE ?;`
+
+	rows, err := tx.QueryContext(ctx, query, keyword, keyword)
+
+	if err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("failed to search music data: %s", err)
+	}
+
+	var musicIDList []string
+
+	for rows.Next() {
+		var musicID string
+		err := rows.Scan(&musicID)
+
+		//fmt.Println(musicID)
+
+		musicIDList = append(musicIDList, musicID)
+
+		if err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("failed to search music data: %s", err)
+		}
+	}
+
+	return musicIDList, nil
 
 }
