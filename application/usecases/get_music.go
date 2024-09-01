@@ -28,7 +28,6 @@ func NewGetMusicUseCase(m repository.MusicRepositoryImpl) *GetMusicUseCase {
 func (g *GetMusicUseCase) GetMusicData(ctx context.Context, key string) ([]model.MusicData, error) {
 
 	musicIdList, err := g.musicRepo.SearchMusicData(ctx, key)
-	//fmt.Println(musicIdList)
 
 	if err != nil {
 		return nil, err
@@ -37,8 +36,7 @@ func (g *GetMusicUseCase) GetMusicData(ctx context.Context, key string) ([]model
 	var musicList []model.MusicData
 
 	for _, musicId := range musicIdList {
-		//fmt.Println(musicId)
-		musics, err := g.musicRepo.GetMusicData(ctx, string(musicId))
+		musics, err := g.musicRepo.GetMusicData(ctx, musicId)
 		fmt.Println(musics)
 		for _, music := range musics {
 			musicList = append(musicList, music)

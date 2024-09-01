@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/maooz4426/SDVX-Database/domain/model"
 	"github.com/maooz4426/SDVX-Database/domain/repository"
@@ -55,6 +56,8 @@ func (a *MusicRegister) Register(ctx context.Context) error {
 	//pageの枚数を確認する
 	maxPageValue, err := page.All("select#search_page option").Count()
 
+	fmt.Println("maxPageValue", maxPageValue)
+
 	selectBox := page.FindByName("page")
 	for i := 0; i < maxPageValue; i++ {
 		num := strconv.Itoa(maxPageValue - i)
@@ -64,13 +67,23 @@ func (a *MusicRegister) Register(ctx context.Context) error {
 
 		}
 
+		time.Sleep(3 * time.Second)
+		//err = page.SetPageLoad(30)
+		if err != nil {
+			log.Printf("Failed to set page: %v", err)
+		}
+
 		content, err := page.HTML()
 		if err != nil {
 			log.Printf("Failed to get html: %v", err)
 		}
 
+		//fmt.Println("content:", content)
+
 		reader := strings.NewReader(content)
 		doc, _ := goquery.NewDocumentFromReader(reader)
+
+		fmt.Println(page, "scan start")
 
 		if err != nil {
 			log.Fatal(err)
@@ -78,14 +91,23 @@ func (a *MusicRegister) Register(ctx context.Context) error {
 
 		var music model.Music
 		var level model.Level
+		if doc.Find(".music").Length() == 0 {
+			fmt.Println(".music要素が見つかりませんでした")
+		}
+
 		doc.Find(".music").Each(func(i int, s *goquery.Selection) {
+			fmt.Printf("音楽要素 %d が見つかりました\n", i)
+
 			s.Find(".info p").Each(func(i int, info *goquery.Selection) {
+				fmt.Printf("info要素 %d が見つかりました: %s\n", i, info.Text())
 				if i == 0 {
 					music.MusicName = info.Text()
 				} else if i == 1 {
 					music.Composer = info.Text()
 				}
 			})
+
+			//fmt.Println("music:", music)
 
 			if err := a.musicRepo.RegisterMusic(ctx, music); err != nil {
 				log.Printf("Failed to register music %s: %v", music.MusicName, err)
@@ -114,16 +136,18 @@ func (a *MusicRegister) Register(ctx context.Context) error {
 				}
 
 			})
+
+			fmt.Println(page, " finished")
 		})
 
-		time.Sleep(2 * time.Second)
-
-		//test用
-		if i == 0 {
-			break
-		}
+		time.Sleep(5 * time.Second)
+		////test用
+		//if i == 0 {
+		//	break
+		//}
 
 	}
 
+	fmt.Println("register finished")
 	return nil
 }

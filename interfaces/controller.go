@@ -24,7 +24,7 @@ func (c *Controller) GetMusicData(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	key := vars["key"]
-	//fmt.Println(key)
+
 	musics, err := c.GetMusicUseCase.GetMusicData(ctx, key)
 
 	if err != nil {
@@ -33,7 +33,6 @@ func (c *Controller) GetMusicData(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	//encoder := json.NewEncoder(w).SetIndent("", "  ").Encode(musics)
 	js, err := json.MarshalIndent(musics, "", " ")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
