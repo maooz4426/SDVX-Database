@@ -17,7 +17,7 @@ func NewDBConn() (*sql.DB, error) {
 
 	//dbのセットアップ
 
-	dsn := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s?parseTime=true&charset=utf8mb4", sqluser, sqlpass, sqldb)
+	dsn := fmt.Sprintf("%s:%s@tcp(db:3306)/%s?parseTime=true&charset=utf8mb4", sqluser, sqlpass, sqldb)
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
@@ -27,7 +27,7 @@ func NewDBConn() (*sql.DB, error) {
 	for i := 0; i < 6; i++ {
 		if errcon := db.Ping(); errcon != nil {
 			log.Println("Now Trying count:", i)
-			log.Fatal("Failed to connect to database", errcon)
+			log.Println("Failed to connect to database", errcon)
 			db, _ = sql.Open("mysql", dsn)
 		} else {
 			//break
@@ -36,6 +36,8 @@ func NewDBConn() (*sql.DB, error) {
 		}
 		time.Sleep(5 * time.Second)
 	}
+
+	fmt.Println("Failed to connect to database")
 
 	return nil, err
 }
