@@ -34,7 +34,14 @@ func (a *MusicRegister) Register(ctx context.Context) error {
 
 	url := "https://p.eagate.573.jp/game/sdvx/vi/music/index.html"
 
-	driver := agouti.ChromeDriver()
+	options := agouti.ChromeOptions(
+		"args", []string{
+			"--headless",
+			"--no-sandbox",
+			"--disable-dev-shm-usage",
+		})
+
+	driver := agouti.ChromeDriver(options)
 
 	err = driver.Start()
 	if err != nil {
@@ -50,7 +57,7 @@ func (a *MusicRegister) Register(ctx context.Context) error {
 
 	err = page.Navigate(url)
 	if err != nil {
-		log.Printf("Failed to navigate: %v", err)
+		log.Fatal("Failed to navigate: %v", err)
 	}
 
 	//pageの枚数を確認する
